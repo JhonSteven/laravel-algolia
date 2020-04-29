@@ -5,10 +5,13 @@ namespace App;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Scout\Searchable;
+
+use App\Post;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable,Searchable;
 
     /**
      * The attributes that are mass assignable.
@@ -36,4 +39,24 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function searchableAs()
+    {
+        return 'users';
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class,'user_id','id');
+    }
+
+    public function toSearchableArray()
+    {
+        // $this->posts;
+        $array = $this->toArray();
+        $array['posts'] = $this->posts->map(function ($data) {
+            return $data['title'];
+        })->toArray();
+        return $array;
+    }
 }
